@@ -1,4 +1,4 @@
-package jwtparser
+package ginjwtparser
 
 import (
 	"github.com/gin-gonic/gin"
