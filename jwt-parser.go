@@ -29,8 +29,8 @@ type Config struct {
 	//JWTVerifyKeyFile JWT signing file path (if ES or RS, must contain a public key)
 	JWTVerifyKeyFile string
 	//JWTContextName Name of the context property to place JWT claims after token is parsed and validated. defaults to 'jwt'
-	// JWTContextName string
-	jwtVerifyKey interface{}
+	JWTContextName string
+	jwtVerifyKey   interface{}
 
 	//RequiredIssuer Required 'iss' value in token. Not verified if empty.
 	RequiredIssuer string
@@ -43,10 +43,6 @@ type Config struct {
 //Middleware Analyses http request, parse existing JWT tokens and set object "jwt" to gin context according to configuration.Middleware
 //The jwt token claims can be later checked by request handlers with "c.GetString(...)"
 func Middleware(config Config) gin.HandlerFunc {
-	// if config.JWTContextName == "" {
-	// 	config.JWTContextName = "jwt"
-	// }
-
 	if config.JWTSigningMethod == "" {
 		config.JWTSigningMethod = "ES256"
 	}
@@ -55,8 +51,8 @@ func Middleware(config Config) gin.HandlerFunc {
 		config.skipPathRegexp = regexp.MustCompile(config.SkipPathRegex)
 	}
 
-	if config.FromBearer == "" && config.FromCookie == "" && config.FromQuery == "" {
-		panic("gin-jwt-parser: One of FromBearer, FromCookie or FromQuery config must be defined")
+	if config.FromBearer == "" {
+		config.FromBearer = "Authorization"
 	}
 
 	if !strings.HasPrefix(config.JWTSigningMethod, "HS") && !strings.HasPrefix(config.JWTSigningMethod, "RS") && !strings.HasPrefix(config.JWTSigningMethod, "ES") {
@@ -180,8 +176,14 @@ func Middleware(config Config) gin.HandlerFunc {
 			}
 		}
 
+		//set claims directly to context
 		for k, v := range claims {
 			ctx.Set(k, v)
+		}
+
+		//set claims in a single key
+		if config.JWTContextName != "" {
+			ctx.Set(config.JWTContextName, claims)
 		}
 
 		logrus.Debugf("JWT token claims set to context")
