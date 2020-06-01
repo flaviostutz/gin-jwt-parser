@@ -28,7 +28,7 @@ type Config struct {
 	JWTSigningMethod string
 	//JWTVerifyKeyFile JWT signing file path (if ES or RS, must contain a public key)
 	JWTVerifyKeyFile string
-	//JWTContextName Name of the context property to place JWT claims after token is parsed and validated. defaults to 'jwt'
+	//JWTContextName Name of the context property to place JWT claims after token is parsed and validated. This is a replication of the flat claims that are set to the root of the gin.Context. defaults to 'jwt'
 	JWTContextName string
 	jwtVerifyKey   interface{}
 
@@ -40,7 +40,7 @@ type Config struct {
 	RequiredClaims map[string]string
 }
 
-//Middleware Analyses http request, parse existing JWT tokens and set object "jwt" to gin context according to configuration.Middleware
+//Middleware Analyses http request, parse existing JWT tokens and set the claim map to gin.Context according to configuration.Middleware
 //The jwt token claims can be later checked by request handlers with "c.GetString(...)"
 func Middleware(config Config) gin.HandlerFunc {
 	if config.JWTSigningMethod == "" {
